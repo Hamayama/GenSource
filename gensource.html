@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ソース生成ツール</title>
+<!--
+    gensource.html
+    2025-2-11 v1.00
+-->
+<style type="text/css">
+<!--
+.main_container {
+    background-color: #fffca8; /* 背景色 */
+    color: #000000;            /* 文字色 */
+}
+td { font-weight: bold; }
+-->
+</style>
+<script type="text/javascript">
+<!--
+// ****************************************
+//            ブラウザ関連処理等
+// ****************************************
+
+// ***** 汎用 *****
+function Alm(msg) {
+    // alert(msg);
+}
+function Alm2(msg) {
+    alert(msg);
+}
+function DebugShow(msg) {
+    document.getElementById("debug_show1").appendChild(document.createTextNode(msg));
+}
+function DebugShowClear() {
+    document.getElementById("debug_show1").innerHTML = "";
+}
+
+// ***** 動作開始 *****
+function start_func() {
+    // ***** ソースとjsにサンプルデータを設定 *****
+    document.getElementById("src_text1").value = SampleData[0].src;
+    document.getElementById("js_text1").value = SampleData[0].js;
+}
+addEventListener("DOMContentLoaded", start_func, false);
+
+// ***** 変換ボタン *****
+function convert_button() {
+    let src_st;
+    let js_st;
+    let result = {};
+
+    // ***** デバッグ表示の初期化 *****
+    DebugShowClear();
+    // ***** ソースの取得 *****
+    src_st = document.getElementById("src_text1").value;
+    // ***** jsの取得 *****
+    js_st = document.getElementById("js_text1").value;
+    // ***** 変換実行 *****
+    result = GenSrcTool.convert(src_st, js_st);
+    // ***** 出力の表示 *****
+    document.getElementById("out_text1").value = result.out;
+    document.getElementById("result_show1").innerHTML = result.html;
+    document.getElementById("no_change").style.display = (src_st == result.out) ? "block" : "none";
+    return true;
+}
+
+// ***** クリアボタン *****
+function clear_button() {
+    // ***** デバッグ表示の初期化 *****
+    DebugShowClear();
+    // ***** ソースのクリア *****
+    //document.getElementById("src_text1").value = "";
+    // ***** 出力のクリア *****
+    document.getElementById("out_text1").value = "";
+    document.getElementById("result_show1").innerHTML = "";
+    document.getElementById("no_change").style.display = "none";
+    return true;
+}
+
+// ***** サンプルボタン *****
+function sample_button(sample_no) {
+    // ***** ソースとjsにサンプルデータを設定 *****
+    document.getElementById("src_text1").value = SampleData[sample_no].src;
+    document.getElementById("js_text1").value = SampleData[sample_no].js;
+    // ***** 変換ボタンを押したことにする *****
+    convert_button();
+    return true;
+}
+
+
+// ****************************************
+//             ソース生成ツール
+// ****************************************
+
+// ***** GenSrcTool(クラス) *****
+//
+// 公開I/F :
+//
+//   GenSrcTool.convert(src_st, js_st)  変換実行
+//     src_st  ソース(文字列)
+//     js_st   js(文字列)
+//     戻り値  結果オブジェクト
+//               result.out   テキスト出力(文字列)
+//               result.html  HTML出力(文字列)
+//
+class GenSrcTool {
+
+    // ***** 公開I/F *****
+
+    // ***** 変換実行 *****
+    static convert(src_st1, js_st1) {
+        let src_st;                 // ソース(文字列)
+        let js_st;                  // js(文字列)
+        let out_st;                 // テキスト出力(文字列)
+        let html_st;                // HTML出力(文字列)
+        let result = {};            // 戻り値(オブジェクト)
+        let lines_st = [];          // 行データ(文字列)(配列)
+        const reg_newline = /\r\n|\r|\n/;
+                                    // 改行の正規表現(オブジェクト)
+        let iframe;                 // iframe(オブジェクト)
+        let js_func;                // jsの関数(オブジェクト)
+
+        // ***** 戻り値の初期化 *****
+        result = {};
+        result.out = "";
+        result.html = "";
+
+        // ***** 引数のチェック *****
+        if (src_st1 == null) { Alm("GenSrcTool.convert:0001"); return result; }
+        if (js_st1 == null)  { Alm("GenSrcTool.convert:0002"); return result; }
+
+        // ***** ソースの取得 *****
+        src_st = String(src_st1);
+        lines_st = src_st.split(reg_newline);
+
+        // ***** jsの取得 *****
+        js_st = String(js_st1);
+
+        // ***** jsの関数化 *****
+        iframe = document.createElement("iframe");
+        iframe.sandbox = "allow-same-origin allow-modals";
+        document.body.appendChild(iframe);
+        try {
+            js_func = iframe.contentWindow.Function("'use strict'; let fn; return fn = " + js_st + ";");
+        } catch (ex1) {
+            Alm2("js function construction error!\n" + ex1);
+            document.body.removeChild(iframe);
+            return result;
+        }
+
+        // ***** jsの実行 *****
+        out_st = "";
+        try {
+            out_st = js_func.call(null).call(null, src_st, lines_st);
+        } catch (ex2) {
+            Alm2("js function execution error!\n" + ex2);
+            document.body.removeChild(iframe);
+            return result;
+        }
+        document.body.removeChild(iframe);
+        out_st = String(out_st);
+
+        // ***** HTML出力の生成 *****
+        html_st = this.escape_html(out_st);
+
+        // ***** 戻り値を返す *****
+        result.out = out_st;
+        result.html = html_st;
+        return result;
+    }
+
+    // ***** 公開I/Fはここまで *****
+
+    // ***** 以下は内部処理用 *****
+
+    // ***** HTML文字列のエスケープ処理 *****
+    static escape_html(html_st) {
+        return html_st
+            .replace(/&/g,   "&amp;")
+            .replace(/[<]/g, "&lt;")
+            .replace(/>/g,   "&gt;")
+            .replace(/"/g,   "&quot;")
+            .replace(/'/g,   "&#39;");
+    }
+}
+
+
+// ****************************************
+//              サンプルデータ
+// ****************************************
+
+// オブジェクトの配列とする
+//   [ { src: src1, js: js1 }, { src: src2, js: js2 }, ... ]
+
+const SampleData = [
+
+    // ***** sample1 *****
+    {
+        src:
+`string itemName# = "項目#";
+string itemValue# = "値#";
+Console.WriteLine(itemName# + ":" + itemValue#);
+`,
+        js:
+`// 置換して増やす例
+function (src, lines) {
+    let out = "";
+    for (let i = 1; i <= 10; i++) {
+        out += src.replaceAll("#", i);
+        out += "\\n";
+    }
+    return out;
+}
+`
+    },
+
+    // ***** sample2 *****
+    {
+        src:
+`string keyname# = "#";
+string value#   = "@";
+`,
+        js:
+`// 置換して増やす例 その2
+function (src, lines) {
+    let out = "";
+    const keyname = ["ID", "数量", "価格"];
+    const value   = ["1",  "100",  "1000"];
+    for (let i = 0; i < keyname.length; i++) {
+        out += src.replaceAll("#", keyname[i]).replaceAll("@", value[i]);
+        out += "\\n";
+    }
+    return out;
+}
+`
+    },
+
+    // ***** sample3 *****
+    {
+        src:
+`const greeting1 = "@DESC";
+const greeting2 = "@DESC";
+const greeting3 = "@DESC";
+`,
+        js:
+`// 行単位で処理する例
+function (src, lines) {
+    let out = "";
+    const descriptions = ["おはようございます", "こんにちは", "こんばんは"];
+    for (let i = 0; i < lines.length; i++) {
+        out += lines[i].replaceAll("@DESC", descriptions[i]);
+        out += "\\n";
+    }
+    return out;
+}
+`
+    },
+
+    // ***** sample4 *****
+    {
+        src:
+`printf("# 月 は @\\n");`,
+        js:
+`// タブ区切りのデータを利用する例
+function (src, lines) {
+    let out = "";
+    const month_data = \`
+睦月	如月	弥生	卯月	皐月	水無月
+文月	葉月	長月	神無月	霜月	師走
+\`
+    const month_arr = month_data.trim().split(/\\s+/);
+    for (let i = 0; i < 12; i++) {
+        out += src.replaceAll("#", (i + 1)).replaceAll("@", month_arr[i]);
+        out += "\\n";
+    }
+    return out;
+}
+`
+    },
+
+    // ***** sample5 *****
+    {
+        src:
+`CLS
+PRINT "  AA    BBBB      CC    DDDD    EEEEEE"
+PRINT "AA  AA  BB  BB  CC  CC  DD  DD  EE    "
+PRINT "AAAAAA  BBBB    CC      DD  DD  EEEEEE"
+PRINT "AA  AA  BB  BB  CC  CC  DD  DD  EE    "
+PRINT "AA  AA  BBBB      CC    DDDD    EEEEEE"
+END
+`,
+        js:
+`// 正規表現にマッチしたら行を挿入
+function (src, lines) {
+    let out = "";
+    let x = 10, y = 5;
+    for (let i = 0; i < lines.length; i++) {
+        if (/PRINT/.test(lines[i])) {
+            out += "LOCATE " + x + "," + y + "\\n";
+            y++;
+        }
+        out += lines[i] + "\\n";
+    }
+    return out;
+}
+`
+    },
+
+    // ***** sample6 *****
+    {
+        src:
+`CLS
+LOCATE 10,5
+PRINT "  AA    BBBB      CC    DDDD    EEEEEE"
+LOCATE 10,6
+PRINT "AA  AA  BB  BB  CC  CC  DD  DD  EE    "
+LOCATE 10,7
+PRINT "AAAAAA  BBBB    CC      DD  DD  EEEEEE"
+LOCATE 10,8
+PRINT "AA  AA  BB  BB  CC  CC  DD  DD  EE    "
+LOCATE 10,9
+PRINT "AA  AA  BBBB      CC    DDDD    EEEEEE"
+END
+`,
+        js:
+`// 正規表現にマッチしたら行を削除
+function (src, lines) {
+    let out = "";
+    for (let i = 0; i < lines.length; i++) {
+        if (/LOCATE/.test(lines[i])) { continue; }
+        out += lines[i] + "\\n";
+    }
+    return out;
+}
+`
+    },
+
+];
+
+
+// -->
+</script>
+</head>
+<body class="main_container">
+  <form action="#" onsubmit="convert_button(); return false;">
+    <table style="width: 95%;">
+      <tr>
+        <td colspan="3" style="text-align: center;">【 ソース生成ツール 】</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align: center;">
+(src に js を適用して out を生成するツールです。[convert] で実行します。[sampleX] で参考例を表示します。)<br>
+(js の function の引数は、src が全体で lines が各行の配列です。使いやすい方を利用ください。return が out になります。)
+        </td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top;">src:</td>
+        <td style="width: 95%;">
+          <textarea aria-label="source textbox" id="src_text1" cols="40" rows="10" style="width: 100%;"></textarea>
+        </td>
+        <td></td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top;">js:</td>
+        <td style="width: 95%;">
+          <textarea aria-label="js textbox" id="js_text1" cols="40" rows="10" style="width: 100%;"></textarea>
+        </td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <input type="submit" value="convert"> &nbsp;
+          <input type="button" value="clear" onclick="clear_button();" style="margin-bottom: 10px;">
+        </td>
+        <td></td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top;">out:</td>
+        <td style="width: 95%;">
+          <textarea aria-label="output textbox" id="out_text1" cols="40" rows="10" style="width: 100%;"></textarea>
+        </td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <input type="button" value="sample1" onclick="sample_button(0);">
+          <input type="button" value="sample2" onclick="sample_button(1);">
+          <input type="button" value="sample3" onclick="sample_button(2);">
+          <input type="button" value="sample4" onclick="sample_button(3);">
+          <input type="button" value="sample5" onclick="sample_button(4);">
+          <input type="button" value="sample6" onclick="sample_button(5);">
+        </td>
+        <td></td>
+      </tr>
+    </table>
+    <div id="no_change" style="margin-top: 10px; display: none;"><b>[ no change ]</b></div>
+    <pre><span id="debug_show1"></span></pre>
+    <pre><span id="result_show1"></span></pre>
+  </form>
+</body>
+</html>
