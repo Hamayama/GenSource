@@ -6,7 +6,7 @@
 <title>ソース生成ツール</title>
 <!--
     gensource.html
-    2025-2-11 v1.00
+    2025-2-15 v1.01
 -->
 <style type="text/css">
 <!--
@@ -344,62 +344,60 @@ function (src, lines) {
 </script>
 </head>
 <body class="main_container">
-  <form action="#" onsubmit="convert_button(); return false;">
-    <table style="width: 95%;">
-      <tr>
-        <td colspan="3" style="text-align: center;">【 ソース生成ツール 】</td>
-      </tr>
-      <tr>
-        <td colspan="3" style="text-align: center;">
+  <table style="width: 95%;">
+    <tr>
+      <td colspan="3" style="text-align: center;">【 ソース生成ツール 】</td>
+    </tr>
+    <tr>
+      <td colspan="3" style="text-align: center;">
 (src に js を適用して out を生成するツールです。[convert] で実行します。[sampleX] で参考例を表示します。)<br>
 (js の function の引数は、src が全体で lines が各行の配列です。使いやすい方を利用ください。return が out になります。)
-        </td>
-      </tr>
-      <tr>
-        <td style="vertical-align: top;">src:</td>
-        <td style="width: 95%;">
-          <textarea aria-label="source textbox" id="src_text1" cols="40" rows="10" style="width: 100%;"></textarea>
-        </td>
-        <td></td>
-      </tr>
-      <tr>
-        <td style="vertical-align: top;">js:</td>
-        <td style="width: 95%;">
-          <textarea aria-label="js textbox" id="js_text1" cols="40" rows="10" style="width: 100%;"></textarea>
-        </td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td>
-          <input type="submit" value="convert"> &nbsp;
-          <input type="button" value="clear" onclick="clear_button();" style="margin-bottom: 10px;">
-        </td>
-        <td></td>
-      </tr>
-      <tr>
-        <td style="vertical-align: top;">out:</td>
-        <td style="width: 95%;">
-          <textarea aria-label="output textbox" id="out_text1" cols="40" rows="10" style="width: 100%;"></textarea>
-        </td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td>
-          <input type="button" value="sample1" onclick="sample_button(0);">
-          <input type="button" value="sample2" onclick="sample_button(1);">
-          <input type="button" value="sample3" onclick="sample_button(2);">
-          <input type="button" value="sample4" onclick="sample_button(3);">
-          <input type="button" value="sample5" onclick="sample_button(4);">
-          <input type="button" value="sample6" onclick="sample_button(5);">
-        </td>
-        <td></td>
-      </tr>
-    </table>
-    <div id="no_change" style="margin-top: 10px; display: none;"><b>[ no change ]</b></div>
-    <pre><span id="debug_show1"></span></pre>
-    <pre><span id="result_show1"></span></pre>
-  </form>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">src:</td>
+      <td style="width: 95%;">
+        <textarea aria-label="source textbox" id="src_text1" cols="40" rows="10" style="width: 100%;"></textarea>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">js:</td>
+      <td style="width: 95%;">
+        <textarea aria-label="js textbox" id="js_text1" cols="40" rows="10" style="width: 100%;"></textarea>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <input type="button" value="convert" onclick="convert_button();"> &nbsp;
+        <input type="button" value="clear" onclick="clear_button();" style="margin-bottom: 10px;">
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">out:</td>
+      <td style="width: 95%;">
+        <textarea aria-label="output textbox" id="out_text1" cols="40" rows="10" style="width: 100%;"></textarea>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <input type="button" value="sample1" onclick="sample_button(0);">
+        <input type="button" value="sample2" onclick="sample_button(1);">
+        <input type="button" value="sample3" onclick="sample_button(2);">
+        <input type="button" value="sample4" onclick="sample_button(3);">
+        <input type="button" value="sample5" onclick="sample_button(4);">
+        <input type="button" value="sample6" onclick="sample_button(5);">
+      </td>
+      <td></td>
+    </tr>
+  </table>
+  <div id="no_change" style="margin-top: 10px; display: none;"><b>[ no change ]</b></div>
+  <pre><span id="debug_show1"></span></pre>
+  <pre><span id="result_show1"></span></pre>
 </body>
 </html>
