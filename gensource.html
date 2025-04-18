@@ -6,7 +6,7 @@
 <title>ソース生成ツール</title>
 <!--
     gensource.html
-    2025-2-16 v1.02
+    2025-4-18 v1.03
 -->
 <style type="text/css">
 .main_container {
@@ -135,6 +135,9 @@ class GenSrcTool {
 
         // ***** jsの取得 *****
         js_st = String(js_st1);
+        if (js_st.trim() == "") {
+            js_st = "function (src, lines) { return ''; }";
+        }
 
         // ***** jsの関数化 *****
         iframe = document.createElement("iframe");
